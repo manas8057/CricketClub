@@ -12,6 +12,17 @@ const sun = new THREE.DirectionalLight(0xffedcf,3); sun.position.set(-12,22,10);
 const fill = new THREE.DirectionalLight(0x8cb9ff,1.3); fill.position.set(12,10,-16); scene.add(fill);
 const material = (color,roughness=.8,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
 const M={grass:material(0x367d43),stripe:material(0x2d713c),pitch:material(0xb99b6d),line:material(0xf4edcf),white:material(0xf2eee1),skin:material(0x9a6548),skin2:material(0xb67b57),navy:material(0x183d68),blue:material(0x2869a2),gold:material(0xe5bd67),wood:material(0xc58c43),red:material(0xd74435),black:material(0x171d1a)};
+// Fine procedural turf texture gives the outfield visible grass grain and mowing detail.
+function turfTexture(baseA,baseB){
+ const canvas=document.createElement('canvas');canvas.width=256;canvas.height=256;
+ const ctx=canvas.getContext('2d');ctx.fillStyle=baseA;ctx.fillRect(0,0,256,256);
+ for(let i=0;i<18000;i++){const x=Math.random()*256,y=Math.random()*256,a=.025+Math.random()*.11;ctx.fillStyle=Math.random()>.5?'rgba(225,238,174,'+a+')':'rgba(8,35,14,'+a+')';ctx.fillRect(x,y,1+Math.random()*2,1+Math.random()*2)}
+ for(let y=0;y<256;y+=32){ctx.fillStyle=baseB;ctx.globalAlpha=.08;ctx.fillRect(0,y,256,12)}ctx.globalAlpha=1;
+ const tex=new THREE.CanvasTexture(canvas);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.repeat.set(5,5);tex.anisotropy=8;return tex
+}
+M.grass.map=turfTexture('#397d42','#a3c46a');M.grass.color.set(0xffffff);M.grass.needsUpdate=true;
+M.stripe.map=turfTexture('#34743c','#b0c879');M.stripe.color.set(0xffffff);M.stripe.needsUpdate=true;
+M.pitch.map=turfTexture('#b99b6d','#e4c995');M.pitch.color.set(0xffffff);M.pitch.needsUpdate=true;
 function add(geo,mat,parent=scene,pos=[0,0,0]){const o=new THREE.Mesh(geo,mat);o.position.set(...pos);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
 function cube(parent,pos,size,mat){return add(new THREE.BoxGeometry(...size),mat,parent,pos)}
 function ballMesh(parent,pos,r,mat){return add(new THREE.SphereGeometry(r,20,16),mat,parent,pos)}
