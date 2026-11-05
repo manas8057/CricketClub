@@ -82,8 +82,8 @@ function swing(){
  const shot=state.shot;
  if(q<.08){addWicket(t<.8?'TOO EARLY · BOWLED':'BEATEN · WICKET');return}
  const direction=shot==='drive'?(Math.random()-.5)*.9:shot==='loft'?(Math.random()-.5)*1.65:(Math.random()-.5)*.55;
- const speed=shot==='defend'?8+q*7:shot==='loft'?31+q*15:25+q*13;
- const launch=shot==='defend'?.16:shot==='loft'?.78+q*.12:.34+q*.18;
+ const speed=shot==='defend'?8+q*7:shot==='loft'?40+q*18:32+q*16;
+ const launch=shot==='defend'?.16:shot==='loft'?.88+q*.10:.38+q*.18;
  const side=direction+state.deliveryLine*.14+state.deliverySwing*.25;
  ballBody.position.set(state.deliveryLine,1.05,7.25);
  ballBody.velocity.set(Math.sin(side)*speed,Math.sin(launch)*speed,-Math.cos(side)*speed);
@@ -96,7 +96,7 @@ function chooseShot(s){state.shot=s;document.querySelectorAll('.shot').forEach(b
 function startMatch(){$('restart').classList.add('hidden');state.format=Number($('format').value);state.difficulty=$('difficulty').value;state.userPace=Number($('ballSpeed').value);$('speedValue').textContent=state.userPace+' km/h';state.score=0;state.wickets=0;state.balls=0;state.fours=0;state.sixes=0;state.last='—';state.best='—';state.over=[];state.active=true;state.phase='ready';$('venue').textContent='THE NIGHT LEAGUE';$('menu').classList.add('hidden');hideBanner();hud();$('help').textContent='Watch the ball. Choose your shot. Swing close to the batter for best timing.';nextDelivery()}
 $('ballSpeed').addEventListener('input',e=>{$('speedValue').textContent=e.target.value+' km/h'});$('start').addEventListener('click',startMatch);$('restart').addEventListener('click',startMatch);$('swing').addEventListener('click',swing);$('mobileSwing').addEventListener('click',swing);$('next').addEventListener('click',nextDelivery);$('mobileNext').addEventListener('click',nextDelivery);
 document.querySelectorAll('.shot').forEach(b=>b.addEventListener('click',()=>chooseShot(b.dataset.shot)));
-addEventListener('keydown',e=>{if(e.code==='Space'||e.key.toLowerCase()==='a'){e.preventDefault();swing()}if(['1','2','3'].includes(e.key))chooseShot(['drive','loft','defend'][Number(e.key)-1]);if(e.key==='Enter'&&state.phase==='menu')startMatch()});
+addEventListener('keydown',e=>{if(e.code==='Space'||e.key.toLowerCase()==='a'){e.preventDefault();if(!e.repeat)swing()}if(['1','2','3'].includes(e.key))chooseShot(['drive','loft','defend'][Number(e.key)-1]);if(e.key==='Enter'&&state.phase==='menu')startMatch()});
 const clock=new THREE.Clock();const fixed=1/60;let renderTime=0;
 function resize(){const r=canvas.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix()}new ResizeObserver(resize).observe(canvas);resize();
 function updateBallVisual(){ballVisual.position.set(ballBody.position.x,ballBody.position.y,ballBody.position.z);ballVisual.quaternion.set(ballBody.quaternion.x,ballBody.quaternion.y,ballBody.quaternion.z,ballBody.quaternion.w)}
@@ -118,12 +118,12 @@ function resolveFlight(dt){
    fielder.position.x+=dx/len*dt*3.6;fielder.position.z+=dz/len*dt*3.6;
  }
  // A clean aerial hit over the rope is six; a grounded boundary is four.
- if(dist>28.5&&y>.22){
-   state.ballInPlay=false;state.phase='result';scoreRuns(y>1.05?6:4,state.shot);
+ if(dist>22.5&&y>.22){
+   state.ballInPlay=false;state.phase='result';scoreRuns((y>1.05||state.shot==='loft')?6:4,state.shot);
    setTimeout(()=>{if(state.active)nextDelivery()},1250);return;
  }
  if(y<.19&&Math.abs(ballBody.velocity.y)<1.35){
-   let r=dist>28.5?4:dist>21?3:dist>14?2:dist>7?1:0;
+   let r=dist>22.5?4:dist>17?3:dist>11?2:dist>5?1:0;
    if(nearest<2.15)r=Math.min(r,nearest<.95?0:1);
    if(state.shot==='defend')r=Math.min(r,1);
    state.ballInPlay=false;state.phase='result';scoreRuns(r,state.shot);
