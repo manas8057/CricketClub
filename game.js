@@ -60,10 +60,10 @@ function nextDelivery(){
  state.deliveryType=['seam','swing','cutter','slower'][Math.floor(Math.random()*4)];
  const pace=(base+(Math.random()-.5)*2.2)*(state.deliveryType==='slower'?.82:1);
  state.deliveryDuration=16.1/pace;
- state.deliveryLine=(Math.random()-.5)*.9;
+ state.deliveryLine=0;
  state.bounceAt=.61+Math.random()*.13;
  state.bounceHeight=.38+Math.random()*.48;
- state.deliverySwing=(Math.random()-.5)*(state.deliveryType==='swing'?.7:.38);
+ state.deliverySwing=0;
  state.lastBowlerPace=Math.round(pace*3.6);
  $('bowlerName').textContent=['ARJUN SINGH','KABIR KHAN','DEV PATEL'][Math.floor(Math.random()*3)];
  ballBody.position.set(state.deliveryLine,1.42,-8.6);ballBody.velocity.set(0,0,0);ballBody.angularVelocity.set(0,0,0);ballBody.wakeUp();ballVisual.visible=true;
@@ -74,17 +74,17 @@ function scoreRuns(r,shot){state.score+=r;state.balls++;state.last=String(r);sta
 function swing(){
  if(!state.active||state.phase!=='delivery'||state.contactUsed)return;
  const cfg=settings[state.difficulty],t=state.deliveryTime/state.deliveryDuration;
- if(t<.78){state.swingQueued=true;$('help').textContent='SHOT QUEUED — bat will meet the ball at the crease.';return}
+ if(t<.90){state.swingQueued=true;state.swingAnim=.32;state.swingStart=performance.now()/1000;state.swingTarget=state.shot==='loft'?1.25:.9;$('help').textContent='SWING READY — timing the ball at the crease.';return}
  state.contactUsed=true;state.swingQueued=false;
- const sweetSpot=.965;
+ const sweetSpot=.94;
  const quality=Math.max(0,1-Math.abs(t-sweetSpot)/Math.max(cfg.window,.22));
  const q=Math.min(1,quality);
  const shot=state.shot;
  if(q<.08){addWicket(t<.8?'TOO EARLY · BOWLED':'BEATEN · WICKET');return}
- const direction=shot==='drive'?(Math.random()-.5)*.9:shot==='loft'?(Math.random()-.5)*1.65:(Math.random()-.5)*.55;
- const speed=shot==='defend'?8+q*7:shot==='loft'?40+q*18:32+q*16;
- const launch=shot==='defend'?.16:shot==='loft'?.88+q*.10:.38+q*.18;
- const side=direction+state.deliveryLine*.14+state.deliverySwing*.25;
+ const direction=shot==='drive'?(Math.random()-.5)*.48:shot==='loft'?(Math.random()-.5)*.85:(Math.random()-.5)*.28;
+ const speed=shot==='defend'?10+q*8:shot==='loft'?49+q*22:40+q*19;
+ const launch=shot==='defend'?.20:shot==='loft'?1.02+q*.12:.48+q*.18;
+ const side=direction;
  ballBody.position.set(state.deliveryLine,1.05,7.25);
  ballBody.velocity.set(Math.sin(side)*speed,Math.sin(launch)*speed,-Math.cos(side)*speed);
  ballBody.angularVelocity.set(8+q*9,2,12+q*12);ballBody.wakeUp();
@@ -115,15 +115,15 @@ function resolveFlight(dt){
  // Fielders close down the ball and reduce the number of runs available.
  if(fielder&&nearest<12){
    const dx=x-fielder.position.x,dz=z-fielder.position.z,len=Math.max(.01,Math.hypot(dx,dz));
-   fielder.position.x+=dx/len*dt*3.6;fielder.position.z+=dz/len*dt*3.6;
+   fielder.position.x+=dx/len*dt*5.2;fielder.position.z+=dz/len*dt*5.2;
  }
  // A clean aerial hit over the rope is six; a grounded boundary is four.
- if(dist>22.5&&y>.22){
+ if(dist>20.5&&y>.22);
    state.ballInPlay=false;state.phase='result';scoreRuns((y>1.05||state.shot==='loft')?6:4,state.shot);
    setTimeout(()=>{if(state.active)nextDelivery()},1250);return;
  }
  if(y<.19&&Math.abs(ballBody.velocity.y)<1.35){
-   let r=dist>22.5?4:dist>17?3:dist>11?2:dist>5?1:0;
+   let r=dist>20.5?4:dist>15?3:dist>9?2:dist>4?1:0;
    if(nearest<2.15)r=Math.min(r,nearest<.95?0:1);
    if(state.shot==='defend')r=Math.min(r,1);
    state.ballInPlay=false;state.phase='result';scoreRuns(r,state.shot);
@@ -135,7 +135,7 @@ function resolveFlight(dt){
  }
 }
 function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);renderTime+=dt;camera.position.x=Math.sin(renderTime*.035)*.08;camera.lookAt(0,2.7,0);if(state.swingAnim>0){const u=Math.max(0,1-(performance.now()/1000-state.swingStart)/.32);const ease=Math.sin((1-u)*Math.PI);batter.userData.bat.rotation.z=-.15+state.swingTarget*ease;batter.userData.bat.rotation.x=-.15-.8*ease;batter.userData.arms[0].rotation.x=-.45*ease;batter.userData.arms[1].rotation.x=-.3*ease;if(u<=0){state.swingAnim=0;batter.userData.bat.rotation.set(0,0,0);batter.userData.arms.forEach(a=>a.rotation.set(0,0,0))}}
-if(state.phase==='delivery'){state.deliveryTime+=dt;const t=Math.min(1,state.deliveryTime/state.deliveryDuration||0);const cfg=settings[state.difficulty];const z=-8.6+16.1*t;let y;if(t<state.bounceAt){const u=t/state.bounceAt;y=1.42-.98*u*u}else{const u=(t-state.bounceAt)/(1-state.bounceAt);y=.25+state.bounceHeight*Math.sin(Math.PI*Math.min(1,u))}const swingCurve=Math.sin(t*Math.PI)*state.deliverySwing;const seamCurve=Math.sin(t*19)*.025;ballBody.position.set(state.deliveryLine+swingCurve+seamCurve,Math.max(.16,y),z);ballVisual.position.copy(ballBody.position);$('timingMeter').style.width=(Math.max(0,1-Math.abs(t-.965)/cfg.window)*100)+'%';if(state.swingQueued&&t>=.91&&!state.contactUsed){state.swingQueued=false;swing()}if(t>=1&&!state.contactUsed){addWicket('BEATEN · BOWLED!');}}
+if(state.phase==='delivery'){state.deliveryTime+=dt;const t=Math.min(1,state.deliveryTime/state.deliveryDuration||0);const cfg=settings[state.difficulty];const z=-8.6+16.1*t;let y;if(t<state.bounceAt){const u=t/state.bounceAt;y=1.42-.98*u*u}else{const u=(t-state.bounceAt)/(1-state.bounceAt);y=.25+state.bounceHeight*Math.sin(Math.PI*Math.min(1,u))}ballBody.position.set(0,Math.max(.16,y),z);ballVisual.position.copy(ballBody.position);$('timingMeter').style.width=(Math.max(0,1-Math.abs(t-.965)/cfg.window)*100)+'%';if(state.swingQueued&&t>=.90&&!state.contactUsed){state.swingQueued=false;swing()}if(t>=1&&!state.contactUsed){addWicket('BEATEN · BOWLED!');}}
 if(state.phase==='flight'&&state.ballInPlay){world.step(fixed,dt,3);updateBallVisual();resolveFlight(dt)}
 if(state.phase!=='flight'&&state.phase!=='delivery')$('timingMeter').style.width='0%';
 if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').classList.remove('show')}
