@@ -45,27 +45,51 @@ const batter=player(0,7.5,0x174c39,'batter');batter.rotation.y=Math.PI;
 const bowler=player(0,-8.8,0x9d332d,'bowler');
 const fielders=[[-9,-4],[9,-4],[-13,3],[13,3],[-7,-14],[7,-14],[-18,-1],[18,-1],[0,-21]].map((p,i)=>{const f=player(p[0],p[1],i%2?0x244e86:0x9b3430);f.scale.setScalar(.78);return f});
 function wickets(z){for(const x of [-.23,0,.23])cylinder(scene,[x,.65,z],.045,.045,.9,M.wood,10);cube(scene,[0,1.12,z],[.68,.07,.07],M.wood)}wickets(8.35);wickets(-8.35);
-const state={active:false,phase:'menu',shot:'drive',format:20,difficulty:'normal',score:0,wickets:0,balls:0,fours:0,sixes:0,last:'—',best:'—',over:[],deliveryTime:0,deliveryDuration:0,contactWindow:false,contactUsed:false,shotPower:0,ballInPlay:false,ballTimer:0,runsPending:0,lastBowlerPace:0,fieldTarget:null,accumulator:0};
+const state={active:false,phase:'menu',shot:'drive',format:20,difficulty:'normal',score:0,wickets:0,balls:0,fours:0,sixes:0,last:'—',best:'—',over:[],deliveryTime:0,deliveryDuration:0,contactWindow:false,contactUsed:false,shotPower:0,ballInPlay:false,ballTimer:0,runsPending:0,lastBowlerPace:0,fieldTarget:null,accumulator:0,deliveryLine:0,bounceAt:.68,bounceHeight:.72,deliverySwing:0,deliveryType:'seam',shotDirection:0};
 const settings={easy:{speed:23,window:.23,accuracy:.72},normal:{speed:27,window:.16,accuracy:.58},hard:{speed:31,window:.115,accuracy:.46}};
 function hud(){ $('runs').textContent=state.score;$('wickets').textContent=state.wickets;$('overs').textContent=Math.floor(state.balls/6)+'.'+state.balls%6+' ov';$('runrate').textContent='RR '+(state.balls?state.score/(state.balls/6):0).toFixed(1);$('target').textContent=state.format+' OVER MATCH';$('thisOver').textContent=state.over.join(' ')||'—';$('lastBall').textContent=state.last;$('boundaries').textContent=state.fours+' / '+state.sixes;$('bestShot').textContent=state.best;$('pace').textContent=state.lastBowlerPace||'—';}
 let toastTimer=0;function toast(s){$('toast').textContent=s;$('toast').classList.add('show');toastTimer=1.8}
 function banner(title,sub){$('centre').innerHTML='<h1>'+title+'</h1><p>'+sub+'</p>';$('centre').classList.remove('hidden')}
 function hideBanner(){$('centre').classList.add('hidden')}
 function finish(){state.active=false;state.phase='finished';$('restart').classList.remove('hidden');banner('INNINGS COMPLETE',state.score+' RUNS · '+state.wickets+' WICKETS');$('help').textContent='Match complete. Restart to play another innings.'}
-function nextDelivery(){if(!state.active||state.phase==='delivery'||state.phase==='flight')return;if(state.balls>=state.format*6||state.wickets>=10){finish();return}state.phase='delivery';state.deliveryTime=0;state.deliveryDuration=8.6/settings[state.difficulty].speed;state.contactUsed=false;state.ballInPlay=false;state.lastBowlerPace=Math.round(settings[state.difficulty].speed*3.6*(.94+Math.random()*.12));$('bowlerName').textContent=['ARJUN SINGH','KABIR KHAN','DEV PATEL'][Math.floor(Math.random()*3)];ballBody.position.set((Math.random()-.5)*.24,1.45,-8.6);ballBody.velocity.set(0,0,0);ballBody.angularVelocity.set(0,0,0);ballBody.wakeUp();ballVisual.visible=true;toast('BOWLER IN · '+state.lastBowlerPace+' KM/H');}
+function nextDelivery(){
+ if(!state.active||state.phase==='delivery'||state.phase==='flight')return;
+ if(state.balls>=state.format*6||state.wickets>=10){finish();return}
+ state.phase='delivery';state.deliveryTime=0;state.contactUsed=false;state.ballInPlay=false;
+ const base={easy:34,normal:38,hard:41}[state.difficulty];
+ const pace=base+(Math.random()-.5)*4;
+ state.deliveryDuration=16.1/pace;
+ state.deliveryLine=(Math.random()-.5)*.9;
+ state.bounceAt=.61+Math.random()*.13;
+ state.bounceHeight=.38+Math.random()*.48;
+ state.deliverySwing=(Math.random()-.5)*.38;
+ state.deliveryType=['seam','swing','cutter','slower'][Math.floor(Math.random()*4)];
+ state.lastBowlerPace=Math.round(pace*3.6);
+ $('bowlerName').textContent=['ARJUN SINGH','KABIR KHAN','DEV PATEL'][Math.floor(Math.random()*3)];
+ ballBody.position.set(state.deliveryLine,1.42,-8.6);ballBody.velocity.set(0,0,0);ballBody.angularVelocity.set(0,0,0);ballBody.wakeUp();ballVisual.visible=true;
+ toast(state.deliveryType.toUpperCase()+' · '+state.lastBowlerPace+' KM/H');
+}
 function addWicket(reason='WICKET'){state.wickets++;state.balls++;state.last='W';state.over.push('W');state.phase='result';state.ballInPlay=false;hud();toast(reason);setTimeout(()=>{if(state.active)nextDelivery();},1150);if(state.wickets>=10||state.balls>=state.format*6)setTimeout(finish,1200)}
 function scoreRuns(r,shot){state.score+=r;state.balls++;state.last=String(r);state.over.push(String(r));if(r===4)state.fours++;if(r===6)state.sixes++;if(r>=4)state.best=shot.toUpperCase();if(state.balls%6===0)state.over=[];hud();toast(r===6?'SIX! · '+shot.toUpperCase():r===4?'FOUR! · '+shot.toUpperCase():r+' RUN'+(r===1?'':'S'));}
-function swing(){if(!state.active){return}if(state.phase!=='delivery'||state.contactUsed)return;state.contactUsed=true;const cfg=settings[state.difficulty];const t=state.deliveryTime/state.deliveryDuration;const quality=Math.max(0,1-Math.abs(t-.96)/cfg.window);const q=Math.min(1,quality);const shot=state.shot;const batBonus=shot==='drive'?.05:shot==='loft'?-.04:.12;
-if(q<.12){addWicket('BEATEN! WICKET');return}
-const sweet=q+batBonus;let speed=0,angle=0,launchX=(Math.random()-.5)*.25;
-if(shot==='defend'){speed=4+q*5;angle=.08+q*.12}
-else if(shot==='loft'){speed=18+q*18;angle=.58+q*.38}
-else{speed=12+q*21;angle=.22+q*.27}
-if(q<.42){speed*=.48;angle*=.65}
-const lateral=shot==='loft'?launchX*1.8:launchX;
-ballBody.position.set(0,1.45,8.0);ballBody.velocity.set(lateral*speed,Math.sin(angle)*speed,-Math.cos(angle)*speed);ballBody.angularVelocity.set(8,2,14);ballBody.wakeUp();state.phase='flight';state.ballInPlay=true;state.ballTimer=0;state.shotPower=q;state.runsPending=0;
-batter.userData.bat.rotation.x=-.7;batter.userData.bat.rotation.z=shot==='loft'?.75:-.5;
-$('help').textContent=q>.72?'Sweet timing! Watch the fielders.':'Contact made — run hard!';
+function swing(){
+ if(!state.active||state.phase!=='delivery'||state.contactUsed)return;
+ state.contactUsed=true;
+ const cfg=settings[state.difficulty],t=state.deliveryTime/state.deliveryDuration;
+ const sweetSpot=.965;
+ const quality=Math.max(0,1-Math.abs(t-sweetSpot)/cfg.window);
+ const q=Math.min(1,quality);
+ const shot=state.shot;
+ if(q<.13){addWicket(t<.8?'TOO EARLY · BOWLED':'BEATEN · WICKET');return}
+ const direction=shot==='drive'?(Math.random()-.5)*.9:shot==='loft'?(Math.random()-.5)*1.65:(Math.random()-.5)*.55;
+ const speed=shot==='defend'?5+q*5:shot==='loft'?17+q*17:13+q*19;
+ const launch=shot==='defend'?.12:shot==='loft'?.72+q*.25:.27+q*.28;
+ const side=direction+state.deliveryLine*.14+state.deliverySwing*.25;
+ ballBody.position.set(state.deliveryLine,1.05,7.25);
+ ballBody.velocity.set(Math.sin(side)*speed,Math.sin(launch)*speed,-Math.cos(side)*speed);
+ ballBody.angularVelocity.set(8+q*9,2,12+q*12);ballBody.wakeUp();
+ state.phase='flight';state.ballInPlay=true;state.ballTimer=0;state.shotPower=q;state.shotDirection=direction;state.runsPending=0;
+ batter.userData.bat.rotation.x=-.7;batter.userData.bat.rotation.z=shot==='loft'?.75:-.5;
+ $('help').textContent=q>.78?'MIDDLE OF THE BAT! Track the ball into the field.':q>.4?'Decent contact. Watch the fielders.':'Edged or mistimed — run quickly!';
 }
 function chooseShot(s){state.shot=s;document.querySelectorAll('.shot').forEach(b=>b.classList.toggle('active',b.dataset.shot===s))}
 function startMatch(){$('restart').classList.add('hidden');state.format=Number($('format').value);state.difficulty=$('difficulty').value;state.score=0;state.wickets=0;state.balls=0;state.fours=0;state.sixes=0;state.last='—';state.best='—';state.over=[];state.active=true;state.phase='ready';$('venue').textContent='THE NIGHT LEAGUE';$('menu').classList.add('hidden');hideBanner();hud();$('help').textContent='Watch the ball. Choose your shot. Swing close to the batter for best timing.';nextDelivery()}
@@ -81,9 +105,9 @@ if(y<.16&&Math.abs(ballBody.velocity.y)<1.4){const dist=Math.hypot(x,z);let r;if
 if(state.ballTimer>7){state.ballInPlay=false;state.phase='result';scoreRuns(1,state.shot);setTimeout(()=>{if(state.active)nextDelivery()},1000)}
 }
 function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);renderTime+=dt;camera.position.x=Math.sin(renderTime*.1)*.18;camera.lookAt(0,2.5,0);batter.position.y=Math.sin(renderTime*2)*.012;
-if(state.phase==='delivery'){state.deliveryTime+=dt;const t=Math.min(1,state.deliveryTime/state.deliveryDuration||0);const cfg=settings[state.difficulty];const z=-8.6+16.6*t;const y=1.45+Math.sin(t*Math.PI)*.3;ballBody.position.set(Math.sin(t*4)*.08,y,z);ballVisual.position.copy(ballBody.position);$('timingMeter').style.width=(Math.max(0,1-Math.abs(t-.96)/cfg.window)*100)+'%';if(t>=1&&!state.contactUsed){addWicket('BOWLED!');}}
+if(state.phase==='delivery'){state.deliveryTime+=dt;const t=Math.min(1,state.deliveryTime/state.deliveryDuration||0);const cfg=settings[state.difficulty];const z=-8.6+16.1*t;let y;if(t<state.bounceAt){const u=t/state.bounceAt;y=1.42-.98*u*u}else{const u=(t-state.bounceAt)/(1-state.bounceAt);y=.25+state.bounceHeight*Math.sin(Math.PI*Math.min(1,u))}const swingCurve=Math.sin(t*Math.PI)*state.deliverySwing;const seamCurve=Math.sin(t*19)*.025;ballBody.position.set(state.deliveryLine+swingCurve+seamCurve,Math.max(.16,y),z);ballVisual.position.copy(ballBody.position);$('timingMeter').style.width=(Math.max(0,1-Math.abs(t-.965)/cfg.window)*100)+'%';if(t>=1&&!state.contactUsed){addWicket('BEATEN · BOWLED!');}}
 if(state.phase==='flight'&&state.ballInPlay){world.step(fixed,dt,3);updateBallVisual();resolveFlight(dt)}
 if(state.phase!=='flight'&&state.phase!=='delivery')$('timingMeter').style.width='0%';
 if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)$('toast').classList.remove('show')}
 renderer.render(scene,camera)}
-state.deliveryDuration=8.6/settings.normal.speed;hud();animate();
+state.deliveryDuration=16.1/38;hud();animate();
