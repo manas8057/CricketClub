@@ -99,10 +99,39 @@ addEventListener('keydown',e=>{if(e.code==='Space'||e.key.toLowerCase()==='a'){e
 const clock=new THREE.Clock();const fixed=1/60;let renderTime=0;
 function resize(){const r=canvas.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix()}new ResizeObserver(resize).observe(canvas);resize();
 function updateBallVisual(){ballVisual.position.set(ballBody.position.x,ballBody.position.y,ballBody.position.z);ballVisual.quaternion.set(ballBody.quaternion.x,ballBody.quaternion.y,ballBody.quaternion.z,ballBody.quaternion.w)}
-function resolveFlight(dt){state.ballTimer+=dt;const x=ballBody.position.x,y=ballBody.position.y,z=ballBody.position.z;let nearest=100;let fielder=null;for(const f of fielders){const dx=f.position.x-x,dz=f.position.z-z,d=Math.hypot(dx,dz);if(d<nearest){nearest=d;fielder=f}}
-if(fielder&&nearest<13){const dx=x-fielder.position.x,dz=z-fielder.position.z;const len=Math.max(.01,Math.hypot(dx,dz));fielder.position.x+=dx/len*dt*2.8;fielder.position.z+=dz/len*dt*2.8}
-if(y<.16&&Math.abs(ballBody.velocity.y)<1.4){const dist=Math.hypot(x,z);let r;if(state.shotPower>.72&&dist>22)r=6;else if(dist>24)r=4;else if(dist>15)r=3;else if(dist>9)r=2;else r=1;if(nearest<2.4&&state.ballTimer>1.0)r=Math.min(r,1);if(state.shot==='defend')r=Math.min(r,1);state.ballInPlay=false;state.phase='result';scoreRuns(r,state.shot);setTimeout(()=>{if(state.active)nextDelivery()},1250)}
-if(state.ballTimer>7){state.ballInPlay=false;state.phase='result';scoreRuns(1,state.shot);setTimeout(()=>{if(state.active)nextDelivery()},1000)}
+function resolveFlight(dt){
+ state.ballTimer+=dt;
+ const x=ballBody.position.x,y=ballBody.position.y,z=ballBody.position.z;
+ const dist=Math.hypot(x,z);
+ let nearest=100,fielder=null;
+ for(const f of fielders){const dx=f.position.x-x,dz=f.position.z-z,d=Math.hypot(dx,dz);if(d<nearest){nearest=d;fielder=f}}
+ // A fielder can complete a catch while the ball is still airborne.
+ if(fielder&&nearest<1.05&&y>1.05&&y<3.15&&state.ballTimer>.35){
+   addWicket('CAUGHT IN THE DEEP!');
+   ballVisual.visible=false;
+   return;
+ }
+ // Fielders close down the ball and reduce the number of runs available.
+ if(fielder&&nearest<12){
+   const dx=x-fielder.position.x,dz=z-fielder.position.z,len=Math.max(.01,Math.hypot(dx,dz));
+   fielder.position.x+=dx/len*dt*3.6;fielder.position.z+=dz/len*dt*3.6;
+ }
+ // A clean aerial hit over the rope is six; a grounded boundary is four.
+ if(dist>29&&y>1.0){
+   state.ballInPlay=false;state.phase='result';scoreRuns(6,state.shot);
+   setTimeout(()=>{if(state.active)nextDelivery()},1250);return;
+ }
+ if(y<.19&&Math.abs(ballBody.velocity.y)<1.35){
+   let r=dist>27.5?4:dist>18?3:dist>12?2:dist>5?1:0;
+   if(nearest<2.15)r=Math.min(r,nearest<.95?0:1);
+   if(state.shot==='defend')r=Math.min(r,1);
+   state.ballInPlay=false;state.phase='result';scoreRuns(r,state.shot);
+   setTimeout(()=>{if(state.active)nextDelivery()},1250);return;
+ }
+ if(state.ballTimer>7){
+   state.ballInPlay=false;state.phase='result';scoreRuns(1,state.shot);
+   setTimeout(()=>{if(state.active)nextDelivery()},1000);
+ }
 }
 function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);renderTime+=dt;camera.position.x=Math.sin(renderTime*.1)*.18;camera.lookAt(0,2.5,0);batter.position.y=Math.sin(renderTime*2)*.012;
 if(state.phase==='delivery'){state.deliveryTime+=dt;const t=Math.min(1,state.deliveryTime/state.deliveryDuration||0);const cfg=settings[state.difficulty];const z=-8.6+16.1*t;let y;if(t<state.bounceAt){const u=t/state.bounceAt;y=1.42-.98*u*u}else{const u=(t-state.bounceAt)/(1-state.bounceAt);y=.25+state.bounceHeight*Math.sin(Math.PI*Math.min(1,u))}const swingCurve=Math.sin(t*Math.PI)*state.deliverySwing;const seamCurve=Math.sin(t*19)*.025;ballBody.position.set(state.deliveryLine+swingCurve+seamCurve,Math.max(.16,y),z);ballVisual.position.copy(ballBody.position);$('timingMeter').style.width=(Math.max(0,1-Math.abs(t-.965)/cfg.window)*100)+'%';if(t>=1&&!state.contactUsed){addWicket('BEATEN · BOWLED!');}}
