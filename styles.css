@@ -30,3 +30,6 @@
  .toast{top:22%}
 }
 @media (max-width:850px) and (orientation:landscape){.shell{grid-template-rows:0 1fr}.top{display:none}.layout{grid-template-columns:1fr}.panel{max-height:36dvh}}
+
+#world{display:block;width:100%;height:100%;background:#173c2a}
+@media(max-width:850px) and (orientation:portrait){.viewport{background:#173c2a}.panel{z-index:4}.bottom-left{z-index:2}}
