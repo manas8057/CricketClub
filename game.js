@@ -35,7 +35,7 @@ const groundMat=new CANNON.Material('turf'), ballMat=new CANNON.Material('leathe
 world.addContactMaterial(new CANNON.ContactMaterial(groundMat,ballMat,{friction:.42,restitution:.48}));
 const ground=new CANNON.Body({mass:0,material:groundMat});ground.addShape(new CANNON.Plane());ground.quaternion.setFromEuler(-Math.PI/2,0,0);ground.position.set(0,-.01,0);world.addBody(ground);
 const ballBody=new CANNON.Body({mass:.163,material:ballMat,linearDamping:.015,angularDamping:.035});ballBody.addShape(new CANNON.Sphere(.115));world.addBody(ballBody);ballBody.sleep();
-const ballVisual=ballMesh(scene,[0,1,-8],.115,material(0xc92d24,.3,.08));const seam=add(new THREE.TorusGeometry(.091,.008,6,28),M.white,ballVisual,[0,0,0]);seam.rotation.x=Math.PI/2;
+const ballVisual=ballMesh(scene,[0,1,-8],.115,new THREE.MeshStandardMaterial({color:0xe32620,roughness:.24,metalness:.05,emissive:0x5b0804,emissiveIntensity:.65}));const seam=add(new THREE.TorusGeometry(.091,.008,6,28),M.white,ballVisual,[0,0,0]);seam.rotation.x=Math.PI/2;
 // Character rig made from articulated groups. Swap these for licensed rigged player assets for photoreal visuals.
 function player(x,z,kit,role='fielder',name='PLAYER'){const root=new THREE.Group();root.position.set(x,0,z);scene.add(root);const shirt=material(kit),trouser=material(0xe6e9e2),skin=material(0xa96f50),helmet=material(role==='batter'?0x204638:kit,.4,.2);ballMesh(root,[0,2.05,0],.43,shirt).scale.set(1,.65,.7);cylinder(root,[0,1.45,0],.3,.34,.8,trouser);ballMesh(root,[0,2.72,0],.29,skin).scale.set(1,1.1,.95);for(const side of [-1,1]){ballMesh(root,[side*.105,2.79,.265],.035,M.white);ballMesh(root,[side*.105,2.79,.294],.018,M.black)}ballMesh(root,[0,2.65,.285],.035,skin);cube(root,[0,2.58,.275],[.11,.018,.018],M.black);ballMesh(root,[0,2.88,0],.3,helmet).scale.set(1,.45,1);
 const arms=[];for(const s of [-1,1]){const arm=new THREE.Group();arm.position.set(s*.4,2.2,0);root.add(arm);cylinder(arm,[s*.13,-.24,0],.11,.13,.48,skin);ballMesh(arm,[s*.15,-.48,.02],.13,M.white);arms.push(arm);const leg=new THREE.Group();leg.position.set(s*.17,1.1,0);root.add(leg);cylinder(leg,[0,-.38,0],.14,.17,.72,trouser);ballMesh(leg,[0,-.78,.12],.16,M.black).scale.set(1,.65,1.6);if(role==='batter')cube(root,[s*.2,1.1,.17],[.24,.72,.2],M.white)}
@@ -65,7 +65,7 @@ function nextDelivery(){
  state.bounceHeight=.38+Math.random()*.48;
  state.deliverySwing=0;
  state.lastBowlerPace=Math.round(pace*3.6);
- $('bowlerName').textContent=['ARJUN SINGH','KABIR KHAN','DEV PATEL'][Math.floor(Math.random()*3)];
+ $('bowlerName').textContent=['PRATEEK','RAJNEESH','SRIMAN'][Math.floor(Math.random()*3)];
  ballBody.position.set(state.deliveryLine,1.42,-8.6);ballBody.velocity.set(0,0,0);ballBody.angularVelocity.set(0,0,0);ballBody.wakeUp();ballVisual.visible=true;
  toast(state.deliveryType.toUpperCase()+' · '+state.lastBowlerPace+' KM/H');
 }
