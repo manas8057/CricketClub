@@ -57,13 +57,13 @@ function nextDelivery(){
  if(state.balls>=state.format*6||state.wickets>=10){finish();return}
  state.phase='delivery';state.deliveryTime=0;state.contactUsed=false;state.ballInPlay=false;
  const base={easy:34,normal:38,hard:41}[state.difficulty];
- const pace=base+(Math.random()-.5)*4;
+ state.deliveryType=['seam','swing','cutter','slower'][Math.floor(Math.random()*4)];
+ const pace=(base+(Math.random()-.5)*4)*(state.deliveryType==='slower'?.78:1);
  state.deliveryDuration=16.1/pace;
  state.deliveryLine=(Math.random()-.5)*.9;
  state.bounceAt=.61+Math.random()*.13;
  state.bounceHeight=.38+Math.random()*.48;
- state.deliverySwing=(Math.random()-.5)*.38;
- state.deliveryType=['seam','swing','cutter','slower'][Math.floor(Math.random()*4)];
+ state.deliverySwing=(Math.random()-.5)*(state.deliveryType==='swing'?.7:.38);
  state.lastBowlerPace=Math.round(pace*3.6);
  $('bowlerName').textContent=['ARJUN SINGH','KABIR KHAN','DEV PATEL'][Math.floor(Math.random()*3)];
  ballBody.position.set(state.deliveryLine,1.42,-8.6);ballBody.velocity.set(0,0,0);ballBody.angularVelocity.set(0,0,0);ballBody.wakeUp();ballVisual.visible=true;
