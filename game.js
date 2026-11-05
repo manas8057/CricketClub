@@ -94,8 +94,22 @@ function wicket(message='WICKET'){if(!S.active||S.phase!=='delivery'&&S.phase!==
 function hit(){if(S.phase!=='delivery')return;const timing=S.t/S.duration,q=Math.max(0,1-Math.abs(timing-.86)/.3);if(q<.12){wicket('BEATEN!');return}S.phase='flight';S.queued=false;const angle=(Math.random()-.5)*(S.shot==='defend'?.5:1.25),power=S.shot==='loft'?1.28:S.shot==='defend'?.58:1;S.flight={x:0,y:1.1,z:7.4,vx:Math.sin(angle)*7*power,vy:(S.shot==='loft'?9.2:5.4)*q,vz:9.5*power,age:0};ball.position.set(0,1.1,7.4);batter.userData.swinging=true;batter.userData.swingT=0}
 function swing(){if(!S.active||S.phase!=='delivery')return;const t=S.t/S.duration;if(t>.67&&t<1.05)hit();else {S.queued=true;say('SHOT READY')}}
 function choose(s){S.shot=s;document.querySelectorAll('.shot').forEach(b=>b.classList.toggle('active',b.dataset.shot===s))}
-function start(){S.format=Number($('format').value);S.pace=Number($('ballSpeed').value);S.score=S.wickets=S.balls=S.fours=S.sixes=0;S.last='—';S.best='—';S.over=[];S.active=true;S.phase='ready';$('menu').classList.add('hidden');$('restart').classList.add('hidden');$('centre').classList.add('hidden');$('speedValue').textContent=S.pace+' km/h';batter.userData.swinging=false;hud();next()}
-$('ballSpeed').addEventListener('input',e=>$('speedValue').textContent=e.target.value+' km/h');$('start').addEventListener('click',start);$('restart').addEventListener('click',start);$('swing').addEventListener('click',swing);$('mobileSwing').addEventListener('click',swing);$('next').addEventListener('click',next);$('mobileNext').addEventListener('click',next);document.querySelectorAll('.shot').forEach(b=>b.addEventListener('click',()=>choose(b.dataset.shot)));addEventListener('keydown',e=>{if(e.code==='Space'||e.key.toLowerCase()==='a'){e.preventDefault();if(!e.repeat)swing()}if(['1','2','3'].includes(e.key))choose(['drive','loft','defend'][+e.key-1]);if(e.key==='Enter'&&!S.active)start()});
+function start(){
+ try {
+  S.format=Number($('format').value);S.pace=Number($('ballSpeed').value);
+  S.score=S.wickets=S.balls=S.fours=S.sixes=0;S.last='—';S.best='—';S.over=[];
+  S.active=true;S.phase='ready';
+  $('menu').classList.add('hidden');$('restart').classList.add('hidden');$('centre').classList.add('hidden');
+  $('speedValue').textContent=S.pace+' km/h';batter.userData.swinging=false;
+  hud();next();window.__cricketStarted=true;
+ } catch(err) {
+  S.active=false;$('menu').classList.remove('hidden');
+  $('centre').innerHTML='<h1>GAME ERROR</h1><p>'+String(err.message||err)+'</p>';
+  $('centre').classList.remove('hidden');console.error('CricketClub start failed:',err);
+ }
+}
+window.startMatch=start;
+$('ballSpeed').addEventListener('input',e=>$('speedValue').textContent=e.target.value+' km/h');$('start').addEventListener('click',e=>{e.preventDefault();start()});$('restart').addEventListener('click',start);$('swing').addEventListener('click',swing);$('mobileSwing').addEventListener('click',swing);$('next').addEventListener('click',next);$('mobileNext').addEventListener('click',next);document.querySelectorAll('.shot').forEach(b=>b.addEventListener('click',()=>choose(b.dataset.shot)));addEventListener('keydown',e=>{if(e.code==='Space'||e.key.toLowerCase()==='a'){e.preventDefault();if(!e.repeat)swing()}if(['1','2','3'].includes(e.key))choose(['drive','loft','defend'][+e.key-1]);if(e.key==='Enter'&&!S.active)start()});
 function animate(ts){requestAnimationFrame(animate);const dt=Math.min(.04,(ts-lastTime)/1000||0);lastTime=ts;clock+=dt;
 if(S.phase==='delivery'){S.t+=dt;const t=Math.min(1,S.t/S.duration);ball.position.set(0,1.65+Math.sin(t*Math.PI)*.15,-8+15*t);ball.rotation.x+=dt*14;if(S.queued&&t>.78&&t<.99)hit();else if(t>=1)wicket('MISSED!')}
 if(S.phase==='flight'&&S.flight){const f=S.flight;f.age+=dt;f.x+=f.vx*dt;f.z+=f.vz*dt;f.y+=f.vy*dt;f.vy-=15*dt;f.vx*=.997;ball.position.set(f.x,Math.max(.18,f.y),f.z);ball.rotation.x+=dt*18;if(f.y<=.2){f.y=.2;if(Math.abs(f.vy)>2.1){f.vy*=-.35;f.vx*=.8}else f.vy=0}if(S.phase==='flight'&&(Math.abs(f.x)>18||f.z< -18||f.z>18)){const six=f.y>2.8||S.shot==='loft';result(six?6:4)}else if(S.phase==='flight'&&f.age>3.2)result(S.shot==='defend'?1:2)}
