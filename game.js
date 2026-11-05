@@ -28,7 +28,7 @@ for(let row=0;row<9;row++){
 for(let row=0;row<7;row++)for(let i=0;i<210;i++){
  const a=i/210*Math.PI*2,r=22.5+row*.57,x=Math.cos(a)*r,z=Math.sin(a)*r*.84;
  const person=mesh(new THREE.CapsuleGeometry(.075,.13,2,5),mat([0xe7d5b4,0xe8eeee,0xe1a28a,0x4d78a0,0xd6c36b,0x263344][(i*3+row)%6]),x,1.55+row*.58,z);
- person.rotation.z=(i%3-1)*.12;
+ person.rotation.z=(i%3-1)*.12;person.castShadow=false;person.receiveShadow=false;
 }
 for(let i=0;i<48;i++){
  const a=i/48*Math.PI*2,r=21.95,x=Math.cos(a)*r,z=Math.sin(a)*r*.84;
@@ -91,7 +91,7 @@ function next(){if(!S.active)return;if(S.balls>=S.format*6||S.wickets>=10){finis
 function finish(){S.active=false;S.phase='finished';$('restart').classList.remove('hidden');$('centre').innerHTML='<h1>INNINGS COMPLETE</h1><p>'+S.score+' RUNS · '+S.wickets+' WICKETS</p>';$('centre').classList.remove('hidden')}
 function result(r){if(S.phase!=='flight')return;S.phase='result';ball.visible=false;S.balls++;S.score+=r;S.last=''+r;S.over.push(''+r);if(r===4)S.fours++;if(r===6)S.sixes++;if(r>=4)S.best=S.shot.toUpperCase();if(S.balls%6===0)S.over=[];S.flight=null;hud();say(r===6?'SIX!':r===4?'FOUR!':r+' RUNS');setTimeout(()=>{if(S.active)next()},850)}
 function wicket(message='WICKET'){if(!S.active||S.phase!=='delivery'&&S.phase!=='flight'&&S.phase!=='caught')return;S.phase='result';S.flight=null;ball.visible=false;S.balls++;S.wickets++;S.last='W';S.over.push('W');if(S.balls%6===0)S.over=[];hud();say(message);setTimeout(()=>{if(S.active)next()},1000)}
-function hit(){if(S.phase!=='delivery')return;const timing=S.t/S.duration,q=Math.max(0,1-Math.abs(timing-.86)/.3);if(q<.12){wicket('BEATEN!');return}S.phase='flight';S.queued=false;const angle=(Math.random()-.5)*(S.shot==='defend'?.5:1.25),power=S.shot==='loft'?1.28:S.shot==='defend'?.58:1;S.flight={x:0,y:1.1,z:7.4,vx:Math.sin(angle)*7*power,vy:(S.shot==='loft'?9.2:5.4)*q,vz:-9.5*power,age:0};ball.position.set(0,1.1,7.4);batter.userData.swinging=true;batter.userData.swingT=0}
+function hit(){if(S.phase!=='delivery')return;const timing=S.t/S.duration,q=Math.max(0,1-Math.abs(timing-.86)/.3);if(q<.12){wicket('BEATEN!');return}S.phase='flight';S.queued=false;const angle=(Math.random()-.5)*(S.shot==='defend'?.5:1.25),power=S.shot==='loft'?1.28:S.shot==='defend'?.58:1;S.flight={x:0,y:1.1,z:7.4,vx:Math.sin(angle)*7*power,vy:(S.shot==='loft'?9.2:5.4)*q,vz:9.5*power,age:0};ball.position.set(0,1.1,7.4);batter.userData.swinging=true;batter.userData.swingT=0}
 function swing(){if(!S.active||S.phase!=='delivery')return;const t=S.t/S.duration;if(t>.67&&t<1.05)hit();else {S.queued=true;say('SHOT READY')}}
 function choose(s){S.shot=s;document.querySelectorAll('.shot').forEach(b=>b.classList.toggle('active',b.dataset.shot===s))}
 function start(){S.format=Number($('format').value);S.pace=Number($('ballSpeed').value);S.score=S.wickets=S.balls=S.fours=S.sixes=0;S.last='—';S.best='—';S.over=[];S.active=true;S.phase='ready';$('menu').classList.add('hidden');$('restart').classList.add('hidden');$('centre').classList.add('hidden');$('speedValue').textContent=S.pace+' km/h';batter.userData.swinging=false;hud();next()}
