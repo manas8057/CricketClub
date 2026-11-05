@@ -2,3 +2,31 @@
 @media(max-width:850px){.shell{grid-template-rows:56px 1fr}.top{padding:0 14px}.layout{grid-template-columns:1fr;grid-template-rows:minmax(260px,1fr) auto}.panel{max-height:44dvh;border-left:0;border-top:1px solid var(--line);padding:13px 15px;gap:11px}.intro{display:none}.panel h2{font-size:25px}.stats{grid-template-columns:repeat(4,1fr)}.stat{padding:7px}.stat b{font-size:17px}.divider{padding-top:10px}.mobile-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions{display:none}.hud{inset:10px 11px auto}.scoreboard{padding:7px 10px;min-width:120px}.score{font-size:24px}.stadium-name{font-size:18px}.bottom-left{bottom:9px;left:10px}.top-meta{gap:8px;font-size:9px}}@media(max-width:430px){.panel{max-height:48dvh}.stats{gap:4px}.stat label{font-size:7px}.stat b{font-size:15px}.brand{font-size:18px}.top-meta span:last-child{display:none}.menu-card{padding:20px}}
 
 @media(min-width:1200px){.layout{grid-template-columns:minmax(0,1fr) 360px}.panel{padding:25px}.viewport{min-height:600px}}
+@media (max-width:850px) and (orientation:portrait){
+ body{overflow:hidden}
+ .shell{height:100dvh;display:block}
+ .top{position:absolute;top:0;left:0;right:0;height:44px;background:#07130ebd;backdrop-filter:blur(8px)}
+ .layout{display:block;height:100dvh}
+ .viewport{position:absolute;inset:0;min-height:100dvh}
+ #world{width:100%;height:100%;touch-action:manipulation}
+ .hud{top:52px}
+ .panel{position:absolute;left:0;right:0;bottom:0;max-height:none;height:auto;padding:8px 10px calc(8px + env(safe-area-inset-bottom));gap:7px;background:linear-gradient(180deg,#07130e00,#07130eeb 16%,#07130ef7);border:0;overflow:visible}
+ .intro,.footer,.panel>.divider:first-of-type,.help{display:none}
+ .divider{border:0;padding:0}
+ .section-head{margin:0 0 5px}
+ .section-head strong{font-size:11px}
+ .shots{gap:5px}
+ .shot{padding:7px 3px;font-size:9px}
+ .shot span{font-size:15px;margin:0}
+ .shot small{font-size:8px}
+ .mobile-controls{display:grid;grid-template-columns:1.5fr 1fr;gap:7px}
+ .mobile-controls .btn{padding:11px 7px}
+ .actions{display:none}
+ .player-strip,.stats{display:none}
+ .menu{position:absolute;inset:44px 0 0}
+ .menu-card{width:min(420px,94vw);padding:18px}
+ .bottom-left{bottom:175px;left:10px;font-size:9px}
+ .centre{top:37%}
+ .toast{top:22%}
+}
+@media (max-width:850px) and (orientation:landscape){.shell{grid-template-rows:0 1fr}.top{display:none}.layout{grid-template-columns:1fr}.panel{max-height:36dvh}}
