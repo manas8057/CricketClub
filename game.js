@@ -7,7 +7,7 @@ const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false}); ren
 scene.add(new THREE.HemisphereLight(0xc9ddf4,0x293a2d,1.8));
 const sun=new THREE.DirectionalLight(0xffe6c2,2.6); sun.position.set(-12,24,12); sun.castShadow=true; sun.shadow.mapSize.set(2048,2048); sun.shadow.camera.left=-24;sun.shadow.camera.right=24;sun.shadow.camera.top=24;sun.shadow.camera.bottom=-24;scene.add(sun);
 const mat=(color,roughness=.8,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
-const grass=mat(0x398447), lightGrass=mat(0x4b9851), darkGrass=mat(0x2d713c), soil=mat(0xb99b72), white=mat(0xf5f1df), red=mat(0xd92d2d), skin=mat(0xc98968), hair=mat(0x202638), navy=mat(0x173f75), black=mat(0x171d28), gold=mat(0xe8b85c);
+const grass=mat(0x238b35,.96), lightGrass=mat(0x39a848,.96), darkGrass=mat(0x18752b,.96), soil=mat(0xb99b72), white=mat(0xf5f1df), red=mat(0xd92d2d), skin=mat(0xc98968), hair=mat(0x202638), navy=mat(0x173f75), black=mat(0x171d28), gold=mat(0xe8b85c);
 function mesh(g,m,x,y,z,parent=scene){const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
 function box(x,y,z,sx,sy,sz,m,parent=scene){return mesh(new THREE.BoxGeometry(sx,sy,sz),m,x,y,z,parent)}
 function cylinder(x,y,z,r1,r2,h,m,parent=scene,n=16){return mesh(new THREE.CylinderGeometry(r1,r2,h,n),m,x,y,z,parent)}
@@ -47,7 +47,7 @@ const screenText=box(0,6.4,-22.31,8.5,1.55,.04,mat(0x0b3541,.4,.1));
 function limb(parent,a,b,r,m){const d=new THREE.Vector3().subVectors(b,a);const o=mesh(new THREE.CapsuleGeometry(r,Math.max(.01,d.length()-2*r),4,8),m,0,0,0,parent);o.position.copy(a).add(b).multiplyScalar(.5);o.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),d.normalize());return o}
 function makePlayer(name,kit,x,z,role,scale=1){
 const root=new THREE.Group();scene.add(root);root.position.set(x,0,z);root.scale.setScalar(scale);
-const torso=mesh(new THREE.CapsuleGeometry(.42,.78,5,12),mat(kit),0,1.55,0,root);torso.scale.set(.9,1, .58);
+const kitMat=mat(kit,.62), trouserMat=mat(0x202b39,.78);const torso=mesh(new THREE.CapsuleGeometry(.46,.78,8,18),kitMat,0,1.55,0,root);torso.scale.set(1.02,1,.66);for(const side of [-1,1]){const shoulderPad=mesh(new THREE.SphereGeometry(.22,18,14),kitMat,side*.39,1.91,0,root);shoulderPad.scale.set(1,.82,.9)}
 mesh(new THREE.CylinderGeometry(.16,.19,.24,12),skin,0,2.27,0,root);
 const face=mesh(new THREE.SphereGeometry(.39,28,22),skin,0,2.62,0,root);face.scale.set(.88,1.08,.9);
 mesh(new THREE.SphereGeometry(.405,24,14,0,Math.PI*2,0,Math.PI*.48),hair,0,2.78,-.015,root);
@@ -57,35 +57,35 @@ mesh(new THREE.SphereGeometry(.13,12,8),hair,-.32,2.48,.02,root);mesh(new THREE.
 for(let ex of [-.14,.14]){mesh(new THREE.SphereGeometry(.067,12,10),white,ex,2.62,.326,root);mesh(new THREE.SphereGeometry(.034,10,8),mat(0x24334e),ex,2.62,.378,root);mesh(new THREE.SphereGeometry(.015,8,8),white,ex-.012,2.64,.402,root);const brow=mesh(new THREE.CapsuleGeometry(.025,.12,3,6),hair,ex,2.74,.33,root);brow.rotation.z=ex<0?-.12:.12;}
 const nose=mesh(new THREE.SphereGeometry(.055,12,10),skin,0,2.5,.39,root);nose.scale.set(.75,1.3,.8);
 const smile=mesh(new THREE.TorusGeometry(.075,.012,5,12,Math.PI),mat(0x743e39),0,2.39,.35,root);smile.rotation.z=Math.PI;
-const arms=[],legs=[];
+const arms=[],legs=[],shoes=[];
 // tailored jersey collar, chest stripe, waist belt and detailed cricket pads
 mesh(new THREE.TorusGeometry(.19,.045,8,24),white,0,2.02,.02,root).rotation.x=Math.PI/2;
 box(0,1.55,.245,.09,.8,.025,mat(0xe8e5d8),root);
 box(0,1.08,.02,.78,.09,.62,black,root);
 for(let side of [-1,1]){
 const shoulder=new THREE.Group();shoulder.position.set(side*.42,1.95,0);root.add(shoulder);
-limb(shoulder,new THREE.Vector3(0,0,0),new THREE.Vector3(side*.12,-.48,.04),.12,skin);
+limb(shoulder,new THREE.Vector3(0,0,0),new THREE.Vector3(side*.12,-.48,.04),.145,kitMat);
 const elbow=new THREE.Group();elbow.position.set(side*.12,-.48,.04);shoulder.add(elbow);
 limb(elbow,new THREE.Vector3(0,0,0),new THREE.Vector3(side*.08,-.48,.12),.105,skin);
 mesh(new THREE.SphereGeometry(.12,10,8),skin,side*.08,-.48,.12,elbow);arms.push({shoulder,elbow,side});
 const hip=new THREE.Group();hip.position.set(side*.2,1.05,0);root.add(hip);
-limb(hip,new THREE.Vector3(0,0,0),new THREE.Vector3(0,-.53,0),.15,mat(0x202b39));
+limb(hip,new THREE.Vector3(0,0,0),new THREE.Vector3(0,-.53,0),.17,trouserMat);
 const knee=new THREE.Group();knee.position.set(0,-.53,0);hip.add(knee);
 limb(knee,new THREE.Vector3(0,0,0),new THREE.Vector3(0,-.48,.08),.12,white);
-mesh(new THREE.BoxGeometry(.25,.13,.4),black,0,-.48,.2,knee);legs.push({hip,knee,side});
+mesh(new THREE.BoxGeometry(.25,.13,.4),black,0,-.48,.2,knee);const shoe=mesh(new THREE.BoxGeometry(.28,.15,.48),black,0,-.56,.22,knee);shoes.push(shoe);legs.push({hip,knee,side});
 }
-if(role==='batter'){const bat=mesh(new THREE.BoxGeometry(.13,1.3,.16),gold,.52,1.3,.32,root);bat.rotation.z=-.32;const grip=mesh(new THREE.CylinderGeometry(.055,.055,.35,8),black,.52,1.95,.32,root);grip.rotation.z=-.32;root.userData.bat=bat;root.userData.grip=grip}
+let bat=null,grip=null;if(role==='batter'){bat=mesh(new THREE.BoxGeometry(.13,1.3,.16),gold,.52,1.3,.32,root);bat.rotation.z=-.32;grip=mesh(new THREE.CylinderGeometry(.055,.055,.35,8),black,.52,1.95,.32,root);grip.rotation.z=-.32}
 const label=document.createElement('div');label.className='player-label';label.textContent=name;label.style.display='none';
-root.userData={...root.userData,name,role,arms,legs,baseX:x,baseZ:z,phase:Math.random()*6,react:false,target:null,speed:0};
+root.userData={name,role,arms,legs,shoes,bat,grip,baseX:x,baseZ:z,phase:Math.random()*6,react:false,target:null,speed:0};
 return root;
 }
-const batter=makePlayer('MANAS',0x176747,0,8,'batter',1.05), bowler=makePlayer('PRATEEK',0xa83c37,0,-8.2,'bowler',.94), umpire=makePlayer('UMPIRE',0xf4f0e6,4.2,5.1,'umpire',.85);
+const batter=makePlayer('MANAS',0x176747,0,8,'batter',1.05), bowler=makePlayer('PRATEEK',0xa83c37,0,-8.2,'bowler',.94);
 const stumps=[];for(const z of [-7.5,7.5])for(let x of [-.22,0,.22])stumps.push(cylinder(x,.55,z,.045,.045,1.1,gold));
 const ball=mesh(new THREE.SphereGeometry(.14,20,16),red,0,1,-8);ball.visible=false;const seam=mesh(new THREE.TorusGeometry(.105,.009,5,24),white,0,0,0,ball);seam.rotation.x=.8;
 const S={active:false,phase:'menu',score:0,wickets:0,balls:0,fours:0,sixes:0,shot:'drive',t:0,duration:1.2,queued:false,pace:135,format:20,toast:'',over:[],last:'—',best:'—',flight:null};let clock=0,lastTime=0;
 function hud(){$('runs').textContent=S.score;$('wickets').textContent=S.wickets;$('overs').textContent=Math.floor(S.balls/6)+'.'+S.balls%6+' ov';$('runrate').textContent='RR '+(S.balls?S.score/(S.balls/6):0).toFixed(1);$('target').textContent=S.format+' OVER MATCH';$('thisOver').textContent=S.over.join(' ')||'—';$('lastBall').textContent=S.last;$('boundaries').textContent=S.fours+' / '+S.sixes;$('bestShot').textContent=S.best;$('pace').textContent=S.pace}
 function say(t){const el=$('toast');el.textContent=t;el.classList.add('show');clearTimeout(say.timer);say.timer=setTimeout(()=>el.classList.remove('show'),1300)}
-function posePlayer(p,t,dt){const u=p.userData;const moving=u.role==='bowler'&&S.phase==='delivery';const run=moving?Math.sin(t*12+u.phase):0;u.legs.forEach(l=>{l.hip.rotation.x=run*.65;l.knee.rotation.x=Math.max(0,-run)*.7});u.arms.forEach(a=>{a.shoulder.rotation.x=-run*.55;a.shoulder.rotation.z=a.side*(u.react?-.22:0);a.elbow.rotation.x=u.react?-1.1:0});if(u.role==='bowler'&&S.phase==='delivery'){u.arms[1].shoulder.rotation.x=-1.9+Math.sin(t*13)*.25;u.arms[1].elbow.rotation.x=-.6}if(u.role==='batter'&&S.swinging){p.userData.bat.rotation.z=-.32+Math.sin(S.swingT*9)*1.15}if(u.role==='umpire'){const gesture=S.phase==='result';u.arms.forEach(a=>{a.shoulder.rotation.z=gesture?a.side*-.9:0;a.shoulder.rotation.x=gesture?-.45:0})}}
+function posePlayer(p,t,dt){const u=p.userData;const moving=u.role==='bowler'&&S.phase==='delivery';const run=moving?Math.sin(t*12+u.phase):0;u.legs.forEach(l=>{l.hip.rotation.x=run*.65;l.knee.rotation.x=Math.max(0,-run)*.7});u.arms.forEach(a=>{a.shoulder.rotation.x=-run*.55;a.shoulder.rotation.z=a.side*(u.react?-.22:0);a.elbow.rotation.x=u.react?-1.1:0});if(u.role==='bowler'&&S.phase==='delivery'){u.arms[1].shoulder.rotation.x=-1.9+Math.sin(t*13)*.25;u.arms[1].elbow.rotation.x=-.6}if(u.role==='batter'&&S.swinging){p.userData.bat.rotation.z=-.32+Math.sin(S.swingT*9)*1.15}}
 function updateFielders(dt){}
 function next(){if(!S.active)return;if(S.balls>=S.format*6||S.wickets>=10){finish();return}S.phase='delivery';S.t=0;S.duration=1.24*135/S.pace;S.queued=false;S.flight=null;ball.visible=true;ball.position.set(0,1.65,-8);bowler.userData.arms[1].shoulder.rotation.x=-1.4;say('PRATEEK · '+S.pace+' KM/H')}
 function finish(){S.active=false;S.phase='finished';$('restart').classList.remove('hidden');$('centre').innerHTML='<h1>INNINGS COMPLETE</h1><p>'+S.score+' RUNS · '+S.wickets+' WICKETS</p>';$('centre').classList.remove('hidden')}
@@ -113,7 +113,7 @@ $('ballSpeed').addEventListener('input',e=>$('speedValue').textContent=e.target.
 function animate(ts){requestAnimationFrame(animate);const dt=Math.min(.04,(ts-lastTime)/1000||0);lastTime=ts;clock+=dt;
 if(S.phase==='delivery'){S.t+=dt;const t=Math.min(1,S.t/S.duration);ball.position.set(0,1.65+Math.sin(t*Math.PI)*.15,-8+15*t);ball.rotation.x+=dt*14;if(S.queued&&t>.78&&t<.99)hit();else if(t>=1)wicket('MISSED!')}
 if(S.phase==='flight'&&S.flight){const f=S.flight;f.age+=dt;f.x+=f.vx*dt;f.z+=f.vz*dt;f.y+=f.vy*dt;f.vy-=15*dt;f.vx*=.997;ball.position.set(f.x,Math.max(.18,f.y),f.z);ball.rotation.x+=dt*18;if(f.y<=.2){f.y=.2;if(Math.abs(f.vy)>2.1){f.vy*=-.35;f.vx*=.8}else f.vy=0}if(S.phase==='flight'&&(Math.abs(f.x)>18||f.z< -18||f.z>18)){const six=f.y>2.8||S.shot==='loft';result(six?6:4)}else if(S.phase==='flight'&&f.age>3.2)result(S.shot==='defend'?1:2)}
-for(const p of [batter,bowler,umpire])posePlayer(p,clock,dt);
+for(const p of [batter,bowler])posePlayer(p,clock,dt);
 if(batter.userData.swinging){batter.userData.swingT+=dt;if(batter.userData.swingT>.38)batter.userData.swinging=false}
 renderer.render(scene,camera)}
 function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(h>w){camera.position.set(0,13,25);camera.lookAt(0,1,-1)}else{camera.position.set(0,11,21);camera.lookAt(0,1,-1)}}
