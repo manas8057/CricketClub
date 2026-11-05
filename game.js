@@ -24,8 +24,8 @@ cube(scene,[0,.1,0],[4,.18,20],M.pitch);
 for(const z of [-8.5,8.5]){cube(scene,[0,.205,z],[3.6,.025,.13],M.line);for(const x of [-.7,0,.7])cube(scene,[x,.34,z],[.09,.25,.09],M.white)}
 for(const x of [-1.5,1.5])cube(scene,[x,.205,0],[.035,.02,18],M.line);
 for(let tier=0;tier<6;tier++){const ring=add(new THREE.CylinderGeometry(31+tier*1.1,30.5+tier*1.1,1.1,96,1,true),material(tier%2?0x344d42:0x263d34),scene,[0,1+tier*1.02,0]);ring.material.side=THREE.DoubleSide}
-const crowdMats=[material(0xc8d1bd),material(0xd3b18b),material(0x9bb6d0),material(0xe2d5c2),material(0x879b8b),material(0x9e6b57)];
-for(let row=0;row<6;row++)for(let i=0;i<120;i++){const a=i/120*Math.PI*2,r=30.5+row*1.08;const p=ballMesh(scene,[Math.cos(a)*r,1.65+row*1.02,Math.sin(a)*r],.17,crowdMats[(i*7+row*3)%crowdMats.length]);p.scale.set(.8,1.25,.8)}
+const crowdMats=[material(0xc8d1bd),material(0xd3b18b),material(0x9bb6d0),material(0xe2d5c2),material(0x879b8b),material(0x9e6b57)];const crowd=[];
+for(let row=0;row<6;row++)for(let i=0;i<120;i++){const a=i/120*Math.PI*2,r=30.5+row*1.08;const p=ballMesh(scene,[Math.cos(a)*r,1.65+row*1.02,Math.sin(a)*r],.17,crowdMats[(i*7+row*3)%crowdMats.length]);p.scale.set(.8,1.25,.8);crowd.push({p,base:p.position.y,phase:i*.31+row})}
 const roof=add(new THREE.TorusGeometry(37,.35,8,128),material(0x172b22,.5,.4),scene,[0,7.1,0]);roof.rotation.x=Math.PI/2;
 for(let i=0;i<8;i++){const a=i/8*Math.PI*2;const pole=cylinder(scene,[Math.cos(a)*32,5,Math.sin(a)*32],.1,.13,9,material(0x26382f,.4,.5));const lamp=add(new THREE.BoxGeometry(2,.3,.55),M.white,scene,[Math.cos(a)*32,9,Math.sin(a)*32]);lamp.lookAt(0,9,0);const light=new THREE.PointLight(0xffe9bd,30,20);light.position.set(Math.cos(a)*29,8,Math.sin(a)*29);scene.add(light)}
 for(let i=0;i<32;i++){const a=i/32*Math.PI*2,r=28;const board=cube(scene,[Math.cos(a)*r,.48,Math.sin(a)*r],[2.8,.62,.12],i%3===0?material(0xc8f36b):i%3===1?M.white:material(0x244b38));board.lookAt(0,.48,0)}
@@ -37,13 +37,13 @@ const ground=new CANNON.Body({mass:0,material:groundMat});ground.addShape(new CA
 const ballBody=new CANNON.Body({mass:.163,material:ballMat,linearDamping:.015,angularDamping:.035});ballBody.addShape(new CANNON.Sphere(.115));world.addBody(ballBody);ballBody.sleep();
 const ballVisual=ballMesh(scene,[0,1,-8],.115,material(0xc92d24,.3,.08));const seam=add(new THREE.TorusGeometry(.091,.008,6,28),M.white,ballVisual,[0,0,0]);seam.rotation.x=Math.PI/2;
 // Character rig made from articulated groups. Swap these for licensed rigged player assets for photoreal visuals.
-function player(x,z,kit,role='fielder'){const root=new THREE.Group();root.position.set(x,0,z);scene.add(root);const shirt=material(kit),trouser=material(0xe6e9e2),skin=material(0xa96f50),helmet=material(role==='batter'?0x204638:kit,.4,.2);ballMesh(root,[0,2.05,0],.43,shirt).scale.set(1,.65,.7);cylinder(root,[0,1.45,0],.3,.34,.8,trouser);ballMesh(root,[0,2.72,0],.29,skin).scale.set(1,1.1,.95);ballMesh(root,[0,2.88,0],.3,helmet).scale.set(1,.45,1);
+function player(x,z,kit,role='fielder',name='PLAYER'){const root=new THREE.Group();root.position.set(x,0,z);scene.add(root);const shirt=material(kit),trouser=material(0xe6e9e2),skin=material(0xa96f50),helmet=material(role==='batter'?0x204638:kit,.4,.2);ballMesh(root,[0,2.05,0],.43,shirt).scale.set(1,.65,.7);cylinder(root,[0,1.45,0],.3,.34,.8,trouser);ballMesh(root,[0,2.72,0],.29,skin).scale.set(1,1.1,.95);for(const side of [-1,1]){ballMesh(root,[side*.105,2.79,.265],.035,M.white);ballMesh(root,[side*.105,2.79,.294],.018,M.black)}ballMesh(root,[0,2.65,.285],.035,skin);cube(root,[0,2.58,.275],[.11,.018,.018],M.black);ballMesh(root,[0,2.88,0],.3,helmet).scale.set(1,.45,1);
 const arms=[];for(const s of [-1,1]){const arm=new THREE.Group();arm.position.set(s*.4,2.2,0);root.add(arm);cylinder(arm,[s*.13,-.24,0],.11,.13,.48,skin);ballMesh(arm,[s*.15,-.48,.02],.13,M.white);arms.push(arm);const leg=new THREE.Group();leg.position.set(s*.17,1.1,0);root.add(leg);cylinder(leg,[0,-.38,0],.14,.17,.72,trouser);ballMesh(leg,[0,-.78,.12],.16,M.black).scale.set(1,.65,1.6);if(role==='batter')cube(root,[s*.2,1.1,.17],[.24,.72,.2],M.white)}
 let bat=null;if(role==='batter'){bat=new THREE.Group();bat.position.set(-.43,1.7,.2);root.add(bat);cube(bat,[0,-.42,0],[.19,1.02,.12],M.wood).rotation.z=-.12;cylinder(bat,[0,.1,0],.05,.05,.36,M.black);for(const s of [-1,1]){const pad=cube(root,[s*.2,1.12,.25],[.2,.72,.16],M.white);pad.rotation.z=s*.04}const grill=material(0x9aa7a0,.35,.75);for(let i=-2;i<=2;i++)cylinder(root,[i*.09,2.69,.25],.012,.012,.34,grill,8);cube(root,[0,2.52,.25],[.42,.035,.035],grill)}
-root.userData={arms,bat,role};return root}
-const batter=player(0,7.5,0x174c39,'batter');batter.rotation.y=Math.PI;
-const bowler=player(0,-8.8,0x9d332d,'bowler');
-const fielders=[[-9,-4],[9,-4],[-13,3],[13,3],[-7,-14],[7,-14],[-18,-1],[18,-1],[0,-21]].map((p,i)=>{const f=player(p[0],p[1],i%2?0x244e86:0x9b3430);f.scale.setScalar(.78);return f});
+root.userData={arms,bat,role,name,phase:Math.random()*6.28};return root}
+const batter=player(0,7.5,0x174c39,'batter','MANAS');batter.rotation.y=Math.PI;
+const bowler=player(0,-10.2,0x9d332d,'bowler','PRATEEK');
+const roster=[['DHONI',-9,-4],['KOLHI',9,-4],['SHARMA',-13,3],['SRIMAN',13,3],['RAJNEESH',-7,-14]];const fielders=roster.map((p,i)=>{const f=player(p[1],p[2],i%2?0x244e86:0x9b3430,'fielder',p[0]);f.scale.setScalar(.88);return f});
 function wickets(z){for(const x of [-.23,0,.23])cylinder(scene,[x,.65,z],.045,.045,.9,M.wood,10);cube(scene,[0,1.12,z],[.68,.07,.07],M.wood)}wickets(8.35);wickets(-8.35);
 const state={active:false,phase:'menu',shot:'drive',format:20,difficulty:'normal',userPace:135,score:0,wickets:0,balls:0,fours:0,sixes:0,last:'—',best:'—',over:[],deliveryTime:0,deliveryDuration:0,contactWindow:false,contactUsed:false,shotPower:0,ballInPlay:false,ballTimer:0,runsPending:0,lastBowlerPace:0,fieldTarget:null,accumulator:0,deliveryLine:0,bounceAt:.68,bounceHeight:.72,deliverySwing:0,deliveryType:'seam',shotDirection:0};
 const settings={easy:{speed:23,window:.23,accuracy:.72},normal:{speed:27,window:.16,accuracy:.58},hard:{speed:31,window:.115,accuracy:.46}};
@@ -118,7 +118,7 @@ function resolveFlight(dt){
    fielder.position.x+=dx/len*dt*5.2;fielder.position.z+=dz/len*dt*5.2;
  }
  // A clean aerial hit over the rope is six; a grounded boundary is four.
- if(dist>20.5&&y>.22);
+ if(dist>20.5&&y>.22){
    state.ballInPlay=false;state.phase='result';scoreRuns((y>1.05||state.shot==='loft')?6:4,state.shot);
    setTimeout(()=>{if(state.active)nextDelivery()},1250);return;
  }
@@ -134,7 +134,7 @@ function resolveFlight(dt){
    setTimeout(()=>{if(state.active)nextDelivery()},1000);
  }
 }
-function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);renderTime+=dt;camera.position.x=Math.sin(renderTime*.035)*.08;camera.lookAt(0,2.7,0);if(state.swingAnim>0){const u=Math.max(0,1-(performance.now()/1000-state.swingStart)/.32);const ease=Math.sin((1-u)*Math.PI);batter.userData.bat.rotation.z=-.15+state.swingTarget*ease;batter.userData.bat.rotation.x=-.15-.8*ease;batter.userData.arms[0].rotation.x=-.45*ease;batter.userData.arms[1].rotation.x=-.3*ease;if(u<=0){state.swingAnim=0;batter.userData.bat.rotation.set(0,0,0);batter.userData.arms.forEach(a=>a.rotation.set(0,0,0))}}
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);renderTime+=dt;for(const p of [batter,bowler,...fielders]){const u=p.userData,w=Math.sin(renderTime*2.4+u.phase);p.position.y=Math.max(0,w)*.035;p.rotation.y+=(Math.sin(renderTime*1.4+u.phase)*.0008);u.arms.forEach((a,i)=>a.rotation.x=Math.sin(renderTime*2.4+u.phase+i)*.07);if(u.role==='bowler'&&state.phase==='delivery'){const run=Math.sin(Math.min(1,state.deliveryTime/state.deliveryDuration)*Math.PI);u.arms.forEach((a,i)=>a.rotation.x+=run*(i?-.5:.5))}}for(const c of crowd)c.p.position.y=c.base+Math.max(0,Math.sin(renderTime*2.2+c.phase))*.08;camera.position.x=Math.sin(renderTime*.035)*.08;camera.lookAt(0,2.7,0);if(state.swingAnim>0){const u=Math.max(0,1-(performance.now()/1000-state.swingStart)/.32);const ease=Math.sin((1-u)*Math.PI);batter.userData.bat.rotation.z=-.15+state.swingTarget*ease;batter.userData.bat.rotation.x=-.15-.8*ease;batter.userData.arms[0].rotation.x=-.45*ease;batter.userData.arms[1].rotation.x=-.3*ease;if(u<=0){state.swingAnim=0;batter.userData.bat.rotation.set(0,0,0);batter.userData.arms.forEach(a=>a.rotation.set(0,0,0))}}
 if(state.phase==='delivery'){state.deliveryTime+=dt;const t=Math.min(1,state.deliveryTime/state.deliveryDuration||0);const cfg=settings[state.difficulty];const z=-8.6+16.1*t;let y;if(t<state.bounceAt){const u=t/state.bounceAt;y=1.42-.98*u*u}else{const u=(t-state.bounceAt)/(1-state.bounceAt);y=.25+state.bounceHeight*Math.sin(Math.PI*Math.min(1,u))}ballBody.position.set(0,Math.max(.16,y),z);ballVisual.position.copy(ballBody.position);$('timingMeter').style.width=(Math.max(0,1-Math.abs(t-.965)/cfg.window)*100)+'%';if(state.swingQueued&&t>=.90&&!state.contactUsed){state.swingQueued=false;swing()}if(t>=1&&!state.contactUsed){addWicket('BEATEN · BOWLED!');}}
 if(state.phase==='flight'&&state.ballInPlay){world.step(fixed,dt,3);updateBallVisual();resolveFlight(dt)}
 if(state.phase!=='flight'&&state.phase!=='delivery')$('timingMeter').style.width='0%';
