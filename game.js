@@ -33,8 +33,8 @@ for(let i=0;i<32;i++){const a=i/32*Math.PI*2,r=28;const board=cube(scene,[Math.c
 const world=new CANNON.World({gravity:new CANNON.Vec3(0,-9.81,0)}); world.broadphase=new CANNON.SAPBroadphase(world); world.allowSleep=true;
 const groundMat=new CANNON.Material('turf'), ballMat=new CANNON.Material('leather');
 world.addContactMaterial(new CANNON.ContactMaterial(groundMat,ballMat,{friction:.42,restitution:.48}));
-const ground=new CANNON.Body({mass:0,material:groundMat,shape:new CANNON.Plane()});ground.quaternion.setFromEuler(-Math.PI/2,0,0);ground.position.set(0,-.01,0);world.addBody(ground);
-const ballBody=new CANNON.Body({mass:.163,material:ballMat,shape:new CANNON.Sphere(.115),linearDamping:.015,angularDamping:.035});world.addBody(ballBody);ballBody.sleep();
+const ground=new CANNON.Body({mass:0,material:groundMat});ground.addShape(new CANNON.Plane());ground.quaternion.setFromEuler(-Math.PI/2,0,0);ground.position.set(0,-.01,0);world.addBody(ground);
+const ballBody=new CANNON.Body({mass:.163,material:ballMat,linearDamping:.015,angularDamping:.035});ballBody.addShape(new CANNON.Sphere(.115));world.addBody(ballBody);ballBody.sleep();
 const ballVisual=ballMesh(scene,[0,1,-8],.115,material(0xc92d24,.3,.08));const seam=add(new THREE.TorusGeometry(.091,.008,6,28),M.white,ballVisual,[0,0,0]);seam.rotation.x=Math.PI/2;
 // Character rig made from articulated groups. Swap these for licensed rigged player assets for photoreal visuals.
 function player(x,z,kit,role='fielder'){const root=new THREE.Group();root.position.set(x,0,z);scene.add(root);const shirt=material(kit),trouser=material(0xe6e9e2),skin=material(0xa96f50),helmet=material(role==='batter'?0x204638:kit,.4,.2);ballMesh(root,[0,2.05,0],.43,shirt).scale.set(1,.65,.7);cylinder(root,[0,1.45,0],.3,.34,.8,trouser);ballMesh(root,[0,2.72,0],.29,skin).scale.set(1,1.1,.95);ballMesh(root,[0,2.88,0],.3,helmet).scale.set(1,.45,1);
